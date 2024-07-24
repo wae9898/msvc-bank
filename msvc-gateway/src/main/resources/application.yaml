@@ -1,0 +1,16 @@
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: msvc-customer
+          uri: lb://msvc-customer
+          predicates:
+            - Path=/api/v1/clients/**
+          filters:
+            - StripPrefix=3
+        - id: msvc-account
+          uri: lb://msvc-account
+          predicates:
+            - Path=/api/v1/transactions/**
+          filters:
+            - StripPrefix=3

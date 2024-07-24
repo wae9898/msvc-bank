@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: msvc-customer
+spec:
+  ports:
+    - port: 8002
+      protocol: TCP
+      targetPort: 8002
+  selector:
+    app: msvc-customer
+  type: LoadBalancer
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: msvc-account
+spec:
+  ports:
+    - port: 8001
+      protocol: TCP
+      targetPort: 8001
+  selector:
+    app: msvc-account
+  type: LoadBalancer

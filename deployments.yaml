@@ -1,0 +1,91 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: msvc-customer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: msvc-customer
+  template:
+    metadata:
+      labels:
+        app: msvc-customer
+    spec:
+      containers:
+        - name: msvc-customer
+          image: walterbamac/msvc-customer:latest
+          ports:
+            - containerPort: 8002
+          env:
+            - name: PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: msvc-customer
+                  key: port
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-db-secret
+                  key: username
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-db-secret
+                  key: password
+            - name: DB_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: msvc-customer
+                  key: host
+            - name: DB_DATABASE
+              valueFrom:
+                configMapKeyRef:
+                  name: msvc-customer
+                  key: database
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: msvc-account
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: msvc-account
+  template:
+    metadata:
+      labels:
+        app: msvc-account
+    spec:
+      containers:
+        - name: msvc-account
+          image: walterbamac/msvc-account:latest
+          ports:
+            - containerPort: 8001
+          env:
+            - name: PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: msvc-account
+                  key: port
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-db-secret
+                  key: username
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-db-secret
+                  key: password
+            - name: DB_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: msvc-account
+                  key: host
+            - name: DB_DATABASE
+              valueFrom:
+                configMapKeyRef:
+                  name: msvc-account
+                  key: database

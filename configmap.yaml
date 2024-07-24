@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: msvc-account
+data:
+  port: "8001"
+  host: "postgres-account"
+  database: "msvc_account"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: msvc-customer
+data:
+  port: "8002"
+  host: "postgres-customer"
+  database: "msvc_customer"

@@ -1,0 +1,113 @@
+// CUSTOMERS
+// endpoint: http://localhost:8090/api/v1/clients/customers , method: POST
+{
+    "name": "Jose Lema",
+    "gender": "Masculino",
+    "age": 25,
+    "identification": 3094452641210,
+    "address": "Otavalo sn y principal",
+    "phone": "098254785",
+    "customerId": "23111",
+    "password": "1234",
+    "status" : 1
+}
+
+{
+    "name": "Marianela Montalvo",
+    "gender": "Femenino",
+    "age":26,
+    "identification": 3095452641210,
+    "address": "Amazonas y NNUU",
+    "phone": "097548965",
+    "customerId": "23112",
+    "password": "5678",
+    "status" : 1
+}
+
+{
+    "name": "Juan Osorio",
+    "gender": "Masculino",
+    "age": 30,
+    "identification": 30954672641210,
+    "address": "13 junio y equinoccial",
+    "phone": "098874587",
+    "customerId": "23113",
+    "password": "1245",
+    "status" : 1
+}
+
+//  ACCOUNTS
+// endpoint: http://localhost:8090/api/v1/transactions/accounts , method: POST  
+{
+    "number": "478758",
+    "accountTypeId": 1,
+    "customerId": 23111,
+    "initialBalance": 1200,
+    "status": 1
+}
+
+{
+    "number": "225487",
+    "accountTypeId": 2,
+    "customerId": 23112,
+    "initialBalance": 100,
+    "status": 1
+}
+
+{
+    "number": "495878",
+    "accountTypeId": 1,
+    "customerId": 23113,
+    "initialBalance": 0,
+    "status": 1
+}
+
+{
+    "number": "496825",
+    "accountTypeId": 1,
+    "customerId": 23112,
+    "initialBalance": 540,
+    "status": 1
+}
+
+{
+    "number": "585545",
+    "accountTypeId": 2,
+    "customerId": 23111,
+    "initialBalance": 1200,
+    "status": 1
+}
+
+// MOVEMENTS
+// endpoint: http://localhost:8090/api/v1/transactions/movements , method: POST  
+{
+    "movementType": "RETIRO",
+    "value": 575,
+    "accountNumber": 478758,
+    "status": 1
+}
+
+{
+    "movementType": "DEPOSITO",
+    "value": 600,
+    "accountNumber": 225487,
+    "status": 1
+}
+
+{
+    "movementType": "DEPOSITO",
+    "value": 150,
+    "accountNumber": 495878,
+    "status": 1
+}
+
+{
+    "movementType": "RETIRO",
+    "value": 540,
+    "accountNumber": 496825,
+    "status": 1
+}
+
+// REPORT
+// ENDPOINT: http://localhost:8090/api/v1/transactions/movements/report?startDate=2024-02-12&endDate=2024-02-12&customerId=23112
+// METHOD: GET
