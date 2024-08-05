@@ -1,3 +1,4 @@
+
 -- scripts de creaccion para la base de datos de la api CUSTOMERS
 CREATE TABLE PERSONS (
   PERSON_ID BIGSERIAL PRIMARY KEY,
