@@ -20,7 +20,7 @@ import static org.mockito.Mockito.when;
 
 @WebMvcTest(CustomerController.class)
 @AutoConfigureMockMvc
-class CustomerControllerIntegrationTest {
+public class CustomerControllerIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;

@@ -20,5 +20,5 @@ public interface MovementService {
 
     void deleteMovement(Long id) throws Exception;
 
-    List<MovementReportResponse>  getMovementsReport(LocalDate startDate, LocalDate endDate, Long customerId);
+    List<MovementReportResponse>  getMovementsReport(LocalDate startDate, LocalDate endDate, Long customerId) throws Exception;
 }

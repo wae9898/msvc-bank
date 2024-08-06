@@ -6,6 +6,8 @@ import devsu.msvccustomer.models.dtos.ApiError;
 import devsu.msvccustomer.services.CustomerService;
 import feign.Response;
 import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +20,8 @@ import java.util.List;
 @CrossOrigin(origins = "*")
 @RequestMapping("/customers")
 public class CustomerController {
+
+    Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Autowired
     private CustomerService customerService;

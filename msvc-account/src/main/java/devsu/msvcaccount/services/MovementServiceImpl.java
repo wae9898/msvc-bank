@@ -10,9 +10,10 @@ import devsu.msvcaccount.repositories.AccountRepository;
 import devsu.msvcaccount.repositories.MovementRepository;
 import devsu.msvcaccount.repositories.MovementTypeRepository;
 import devsu.msvcaccount.repositories.interfaces.IMovementReport;
+import jakarta.transaction.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -20,11 +21,12 @@ import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
 public class MovementServiceImpl implements MovementService{
+
+    Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Autowired
     private MovementRepository movementRepository;
@@ -43,32 +45,39 @@ public class MovementServiceImpl implements MovementService{
         try{
             return movementRepository.findAll();
         }catch (Exception e){
+            logger.error("Movements empty list, error: " + e.getMessage());
             return Collections.emptyList();
         }
     }
 
+    @Transactional
     @Override
     public Movement createMovement(MovementDto movement) throws Exception {
-        Account account = accountRepository.findByNumber(movement.getAccountNumber());
-        if (account == null) {
-            throw new Exception("The account does not exist within the database.");
+        try{
+            Account account = accountRepository.findByNumber(movement.getAccountNumber());
+            if (account == null) {
+                throw new Exception("The account does not exist within the database.");
+            }
+
+            MovementType movementType = movementTypeRepository.findByName(movement.getMovementType());
+            Movement movementCreate = new Movement();
+            movementCreate.setBalance(account.getInitialBalance());
+            movementCreate.setValue(movement.getValue());
+            movementCreate.setAccountId(account.getId());
+            movementCreate.setMovementTypeId(movementType.getId());
+
+            if (Objects.equals(movementType.getName(), "RETIRO")) {
+                account.retiro(movement.getValue());
+            } else {
+                account.deposito(movement.getValue());
+            }
+
+            accountRepository.save(account);
+            return movementRepository.save(movementCreate);
+        }catch (Exception e){
+            logger.error("An error occurred while creating a movement, message: " + e.getMessage());
+            throw new Exception("An error occurred while creating a movement, message:" + e.getMessage());
         }
-
-        MovementType movementType = movementTypeRepository.findByName(movement.getMovementType());
-        Movement movementCreate = new Movement();
-        movementCreate.setBalance(account.getInitialBalance());
-        movementCreate.setValue(movement.getValue());
-        movementCreate.setAccountId(account.getId());
-        movementCreate.setMovementTypeId(movementType.getId());
-
-        if (Objects.equals(movementType.getName(), "RETIRO")) {
-            account.retiro(movement.getValue());
-        } else {
-            account.deposito(movement.getValue());
-        }
-
-        accountRepository.save(account);
-        return movementRepository.save(movementCreate);
     }
 
     @Override
@@ -77,19 +86,26 @@ public class MovementServiceImpl implements MovementService{
                 .orElseThrow(() -> new Exception("Movement not found"));
     }
 
+    @Transactional
     @Override
     public Movement updateMovement(Long id, Movement movement) throws Exception {
-        Movement movementToUpdate = movementRepository.findById(id)
-                .orElseThrow(() -> new Exception("Movement not found"));
+        try{
+            Movement movementToUpdate = movementRepository.findById(id)
+                    .orElseThrow(() -> new Exception("Movement not found"));
 
-        movementToUpdate.setMovementTypeId(movement.getMovementTypeId());
-        movementToUpdate.setValue(movement.getValue());
-        movementToUpdate.setBalance(movement.getBalance());
-        movementToUpdate.setAccountId(movement.getAccountId());
+            movementToUpdate.setMovementTypeId(movement.getMovementTypeId());
+            movementToUpdate.setValue(movement.getValue());
+            movementToUpdate.setBalance(movement.getBalance());
+            movementToUpdate.setAccountId(movement.getAccountId());
 
-        return movementRepository.save(movementToUpdate);
+            return movementRepository.save(movementToUpdate);
+        }catch (Exception e){
+            logger.error("Error updating movement");
+            throw new Exception("Error updating movement:" + e.getMessage());
+        }
     }
 
+    @Transactional
     @Override
     public void deleteMovement(Long id) throws Exception {
         Movement movement = movementRepository.findById(id)
@@ -98,34 +114,39 @@ public class MovementServiceImpl implements MovementService{
     }
 
     @Override
-    public List<MovementReportResponse> getMovementsReport(LocalDate startDate, LocalDate endDate, Long customerId) {
-        Customer customer = customerClientRest.getCustomerByCustomerId(customerId);
+    public List<MovementReportResponse> getMovementsReport(LocalDate startDate, LocalDate endDate, Long customerId) throws Exception {
+        try{
+            Customer customer = customerClientRest.getCustomerByCustomerId(customerId);
 
-        if(customer == null){
-            throw new ResourceNotFoundException("Error getting customer: NOT FOUND", "customerId", customerId.toString());
+            if(customer == null){
+                throw new ResourceNotFoundException("Error getting customer: NOT FOUND", "customerId", customerId.toString());
+            }
+
+            List<IMovementReport> movementsReport = movementRepository.getMovementsReport(customerId, startDate, endDate);
+
+            if(movementsReport.isEmpty()){
+                throw new ResourceNotFoundException("Error getting movements report: NOT FOUND", "customerId", customerId.toString());
+            }
+
+            return movementsReport.stream().map(movementReport -> {
+                MovementReportResponse movementReportResponse1 = new MovementReportResponse();
+                movementReportResponse1.setDate(movementReport.getDate());
+                movementReportResponse1.setCustomerName(customer.getName());
+                movementReportResponse1.setCustomerNumber(movementReport.getNumber());
+                movementReportResponse1.setAccountType(movementReport.getType());
+                movementReportResponse1.setInitialBalance(movementReport.getBalance());
+                movementReportResponse1.setStatus(movementReport.getStatus());
+                movementReportResponse1.setMovementTypeName(movementReport.getMovementTypeName());
+                movementReportResponse1.setStatus(movementReport.getStatus());
+                movementReportResponse1.setValueMovement(movementReport.getValue());
+                BigDecimal availableBalance = (Objects.equals(movementReport.getMovementTypeName(), "RETIRO"))?
+                        movementReport.getBalance().subtract(movementReport.getValue()): movementReport.getBalance().add(movementReport.getValue());
+                movementReportResponse1.setAvailableBalance(availableBalance);
+                return movementReportResponse1;
+            }).collect(Collectors.toList());
+        }catch (Exception e){
+            logger.error("");
+            throw new Exception("An error occurred while get data for report:" + e.getMessage());
         }
-
-        List<IMovementReport> movementsReport = movementRepository.getMovementsReport(customerId, startDate, endDate);
-
-        if(movementsReport.isEmpty()){
-            throw new ResourceNotFoundException("Error getting movements report: NOT FOUND", "customerId", customerId.toString());
-        }
-
-        return movementsReport.stream().map(movementReport -> {
-            MovementReportResponse movementReportResponse1 = new MovementReportResponse();
-            movementReportResponse1.setDate(movementReport.getDate());
-            movementReportResponse1.setCustomerName(customer.getName());
-            movementReportResponse1.setCustomerNumber(movementReport.getNumber());
-            movementReportResponse1.setAccountType(movementReport.getType());
-            movementReportResponse1.setInitialBalance(movementReport.getBalance());
-            movementReportResponse1.setStatus(movementReport.getStatus());
-            movementReportResponse1.setMovementTypeName(movementReport.getMovementTypeName());
-            movementReportResponse1.setStatus(movementReport.getStatus());
-            movementReportResponse1.setValueMovement(movementReport.getValue());
-            BigDecimal availableBalance = (Objects.equals(movementReport.getMovementTypeName(), "RETIRO"))?
-                    movementReport.getBalance().subtract(movementReport.getValue()): movementReport.getBalance().add(movementReport.getValue());
-            movementReportResponse1.setAvailableBalance(availableBalance);
-            return movementReportResponse1;
-        }).collect(Collectors.toList());
     }
 }
