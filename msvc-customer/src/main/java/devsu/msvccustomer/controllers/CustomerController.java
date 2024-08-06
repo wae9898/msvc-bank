@@ -29,6 +29,12 @@ public class CustomerController {
     @Autowired
     private ValidateHandler validateHandler;
 
+    @GetMapping("/hello")
+    public String hello() {
+        logger. info( "Hello run in msvc-customer");
+        return "Hello World!";
+    }
+
     @GetMapping()
     public ResponseEntity<?> getCustomers() {
         List<Customer> customers = customerService.getCustomers();
